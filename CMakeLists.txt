@@ -15,4 +15,5 @@ src/CoreApplication.cpp
 src/Object.cpp
 )
 
-add_executable(wscpp ${WSCPP_SRCS} src/main.cpp)
+add_executable(wscpp.json ${WSCPP_SRCS} src/main.cpp)
+add_executable(wscpp-env.cgi ${WSCPP_SRCS} src/env.cpp)
