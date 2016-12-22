@@ -7,6 +7,8 @@ class Object
 {
 public:
     Object();
+
+    virtual std::string toJson() = 0;
 };
 
 #endif
