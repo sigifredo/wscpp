@@ -7,46 +7,44 @@
 int main()
 {
     FILE *fd;
-    char *rawdata; // pointer for rawdata
-    char *data; // will be an offset of rawdata after the two newlines
-    long length; // length of data to be read used for malloc
-    long writelength; // use for the length of the write
-    char *pos; // used in the loop
+    char *rawdata;
+    char *data = nullptr;
+    long lengthrd;
+    long imglength; // use for the length of the write
 
-    std::printf("Content-type: text/plain\r\n\r\n"); // for debug output
-    // Various bits of debug output are included - comment out for live
-    // and replace with whatever output you'd like to send to the client
+    std::printf("Content-type: text/plain\r\n\r\n");
 
     fd = fopen("/tmp/file.dat","wb+"); // open the output file
 
-    length = std::atol(getenv("CONTENT_LENGTH"));
-    writelength = length;
+    imglength = lengthrd = std::atol(getenv("CONTENT_LENGTH"));
 
-    printf("Content Length: %l\n", length);
+    std::printf("Content Length: %ld\n", lengthrd);
 
-    rawdata = new char[length+1]; // malloc required buffer
+    rawdata = new char[lengthrd+1];
 
-    fread(rawdata, length, 1, stdin); // read into buffer
+    fread(rawdata, lengthrd, 1, stdin);
 
     // now comes the loop, there are better ways but not that I can find quickly enough
-    for (pos = rawdata; pos < (rawdata+length-4); pos++)
+    for (char * it = rawdata; it < (rawdata+lengthrd-4); it++)
     {
-        writelength--; // decrement the write length
-        printf("%c", pos[0]); // used for debug output (comment out for live)
+        imglength--;
+        printf("%c", it[0]);
 
-        if ( (pos[0]==13) && (pos[1]==10) && (pos[2]==13) && (pos[3]==10) && ( (pos[4]<32)||(pos[4]>127) ) ) // pattern to find two double-newlines
+        if ( (it[0]==13) && (it[1]==10) && (it[2]==13) && (it[3]==10) && ( (it[4]<32)||(it[4]>127) ) )
         {
-            data = pos+4; // move data pointer forward 4 to start of actual data
-            printf("Found\n"); // another debug line - comment out for live
-            writelength-=3; // decrement writelength by three (done one already above for this loop)
+            data = it+4;
+            imglength -= 3;
             break;
         }
     }
 
-    printf("Writelength: %u\n",writelength); // yet another debug
+    if (data)
+    {
+        printf("Writelength: %ld\n", imglength); // yet another debug
 
-    // write the data to the file
-    fwrite(data, 1, writelength, fd);
+        // write the data to the file
+        fwrite(data, 1, imglength, fd);
+    }
 
     // close the file
     fclose(fd);
