@@ -18,3 +18,6 @@ src/Object.cpp
 add_executable(wscpp.json ${WSCPP_SRCS} src/main.cpp)
 add_executable(wscpp-env.cgi ${WSCPP_SRCS} src/env.cpp)
 add_executable(upload.cgi ${WSCPP_SRCS} src/upload.cpp)
+add_executable(upload-qt.cgi ${WSCPP_SRCS} src/upload-qt.cpp)
+
+target_link_libraries(upload-qt.cgi Qt5::Core)
