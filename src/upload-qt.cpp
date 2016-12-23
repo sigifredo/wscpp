@@ -1,57 +1,60 @@
 
 
+// Qt
+#include <QTemporaryFile>
+
+// std
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 int main()
 {
-    FILE *fd;
-    char *rawdata;
-    char *data = nullptr;
-    long lengthrd;
-    long imglength; // use for the length of the write
+    QTemporaryFile file;
+    file.setAutoRemove(false);
 
     std::printf("Content-type: text/plain\r\n\r\n");
 
-    fd = fopen("/tmp/file.dat","wb+"); // open the output file
-
-    imglength = lengthrd = std::atol(getenv("CONTENT_LENGTH"));
-
-    std::printf("Content Length: %ld\n", lengthrd);
-
-    rawdata = new char[lengthrd+1];
-
-    fread(rawdata, lengthrd, 1, stdin);
-
-    // now comes the loop, there are better ways but not that I can find quickly enough
-    for (char * it = rawdata; it < (rawdata+lengthrd-4); it++)
+    if (file.open())
     {
-        imglength--;
-        printf("%c", it[0]);
+        char * rawdata;
+        char * imgPtr = nullptr;
+        long lengthrd, imglength;
 
-        if ( (it[0]==13) && (it[1]==10) && (it[2]==13) && (it[3]==10) && ( (it[4]<32)||(it[4]>127) ) )
+        imglength = lengthrd = std::atol(getenv("CONTENT_LENGTH"));
+        rawdata = new char[lengthrd+1];
+
+        std::printf("Content Length: %ld\n", lengthrd);
+
+        fread(rawdata, lengthrd, 1, stdin);
+
+        // now comes the loop, there are better ways but not that I can find quickly enough
+        for (char * it = rawdata; it < (rawdata+lengthrd-4); it++)
         {
-            data = it+4;
-            imglength -= 3;
-            break;
+            imglength--;
+            std::printf("%c", it[0]);
+
+            if (it[0] == 13 && it[1] == 10 && it[2] == 13 && it[3] == 10 && (it[4] < 32 || it[4] > 127))
+            {
+                imgPtr = it+4;
+                imglength -= 3;
+                break;
+            }
         }
+
+        if (imgPtr)
+        {
+            std::printf("Writelength: %ld\n", imglength);
+            file.write(imgPtr, imglength);
+        }
+
+        delete [] rawdata;
+
+        std::printf("Upload Complete at %s\n", qPrintable(file.fileName())); // debug - comment out for live
+        file.close();
     }
-
-    if (data)
-    {
-        printf("Writelength: %ld\n", imglength); // yet another debug
-
-        // write the data to the file
-        fwrite(data, 1, imglength, fd);
-    }
-
-    // close the file
-    fclose(fd);
-
-    delete [] rawdata; // free memory
-
-    std::printf("Upload Complete"); // debug - comment out for live
+    else
+        std::printf("The file couldn't be uploaded.\n");
 
     return 0; // exit
 }
